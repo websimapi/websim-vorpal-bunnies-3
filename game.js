@@ -38,7 +38,7 @@ export let gameState = {
     log: ["Your adventure begins!"],
 };
 
-function saveGame() {
+export function saveGame() {
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
     } catch (e) {
