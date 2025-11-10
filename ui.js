@@ -86,25 +86,33 @@ function updateCustomUpgradeButtons(state) {
     const newIds = new Set();
 
     upgrades.forEach(upgrade => {
-        newIds.add(upgrade.id);
-        let button = existingButtons.get(upgrade.id);
+        newIds.add(upgrade.itemId);
+        let button = existingButtons.get(upgrade.itemId);
 
         if (!button) {
             button = document.createElement('button');
             button.className = 'upgrade-button';
-            button.dataset.upgradeId = upgrade.id;
+            button.dataset.upgradeId = upgrade.itemId;
             button.onclick = () => {
-                playSound('ui_click');
-                purchaseAndEquip(upgrade);
+                if (!upgrade.purchased) {
+                    playSound('ui_click');
+                    purchaseAndEquip(upgrade);
+                }
             };
             container.appendChild(button);
         }
 
+        const costText = upgrade.purchased ? "Owned" : `${upgrade.cost} CS`;
         button.innerHTML = `
             <span class="name">${upgrade.itemName}</span>
-            <span class="cost">${upgrade.cost} CS</span>
+            <span class="cost">${costText}</span>
         `;
-        button.disabled = state.resources.carrotShards < upgrade.cost;
+        button.disabled = state.resources.carrotShards < upgrade.cost || upgrade.purchased;
+        if (upgrade.purchased) {
+            button.classList.add('purchased');
+        } else {
+            button.classList.remove('purchased');
+        }
     });
 
     // Remove old buttons

@@ -230,6 +230,16 @@ main {
     background-color: #5c4800;
 }
 
+#custom-upgrades-container .upgrade-button.purchased {
+    background-color: #2a3a2a;
+    border-color: #4caf50;
+    cursor: default;
+}
+
+#custom-upgrades-container .upgrade-button.purchased .cost {
+    color: #4caf50;
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;

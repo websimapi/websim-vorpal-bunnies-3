@@ -27,9 +27,15 @@ async function main() {
     const currentUser = await window.websim.getCurrentUser();
 
     room.collection('ai_upgrade')
-        .filter({ owner: currentUser.username, purchased: { $ne: true } })
-        .subscribe((upgrades) => {
-            gameState.customUpgrades = upgrades.reverse();
+        .filter({ username: currentUser.username })
+        .subscribe((docs) => {
+            if (docs.length > 0) {
+                // The newest doc is the first one
+                const userCreationsDoc = docs[0];
+                gameState.customUpgrades = (userCreationsDoc.creations || []).slice().reverse();
+            } else {
+                gameState.customUpgrades = [];
+            }
         });
 
     requestAnimationFrame(gameLoop);

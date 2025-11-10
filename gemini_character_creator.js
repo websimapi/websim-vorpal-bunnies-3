@@ -121,13 +121,33 @@ async function proceedWithGeneration(promptText, itemName, cost) {
         <div class="loader"></div>
     `);
     const currentUser = await window.websim.getCurrentUser();
-    await room.collection('ai_upgrade').create({
-        owner: currentUser.username,
+
+    const newItem = {
+        itemId: self.crypto.randomUUID(),
         itemName,
         prompt: promptText,
         cost,
         mergedImageUrl: mergedUrl,
-    });
+        purchased: false,
+    };
+
+    const userDocs = await room.collection('ai_upgrade').filter({ username: currentUser.username }).getList();
+    const userCreationsDoc = userDocs.length > 0 ? userDocs[0] : null;
+
+    if (userCreationsDoc) {
+        // Document exists, update it by appending the new item
+        const updatedCreations = [...(userCreationsDoc.creations || []), newItem];
+        await room.collection('ai_upgrade').update(userCreationsDoc.id, {
+            creations: updatedCreations
+        });
+    } else {
+        // No document, create a new one
+        await room.collection('ai_upgrade').create({
+            // 'username' is added automatically by websim
+            creations: [newItem]
+        });
+    }
+
 
     hideModal();
     document.getElementById('ai-prompt').value = "";
@@ -139,13 +159,30 @@ export async function purchaseAndEquip(upgrade) {
         gameState.bunny.currentPortraitUrl = upgrade.mergedImageUrl;
         document.querySelector('.bunny-portrait').src = upgrade.mergedImageUrl;
 
-        // Remove from local state for immediate UI update
-        gameState.customUpgrades = gameState.customUpgrades.filter(u => u.id !== upgrade.id);
+        // Update the item's state locally for immediate UI feedback
+        const localUpgrade = gameState.customUpgrades.find(u => u.itemId === upgrade.itemId);
+        if (localUpgrade) {
+            localUpgrade.purchased = true;
+        }
 
-        // Mark as purchased in DB
-        await room.collection('ai_upgrade').update(upgrade.id, {
-            purchased: true
-        });
+        // Find user's record and update the specific item in the array
+        const currentUser = await window.websim.getCurrentUser();
+        const userDocs = await room.collection('ai_upgrade').filter({ username: currentUser.username }).getList();
+        const userCreationsDoc = userDocs.length > 0 ? userDocs[0] : null;
+
+        if (userCreationsDoc) {
+            const updatedCreations = userCreationsDoc.creations.map(item => {
+                if (item.itemId === upgrade.itemId) {
+                    return { ...item, purchased: true };
+                }
+                return item;
+            });
+
+            await room.collection('ai_upgrade').update(userCreationsDoc.id, {
+                creations: updatedCreations
+            });
+        }
+
 
         saveGame();
         // The subscription will eventually sync, but local change is faster.
