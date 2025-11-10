@@ -1,5 +1,5 @@
 import { purchaseUpgrade } from './game.js';
-import { purchaseAndEquip } from './gemini_character_creator.js';
+import { purchaseAndEquip, toggleEquipUpgrade } from './gemini_character_creator.js';
 import { playSound } from './sounds.js';
 
 const elements = {
@@ -94,24 +94,32 @@ function updateCustomUpgradeButtons(state) {
             button.className = 'upgrade-button';
             button.dataset.upgradeId = upgrade.itemId;
             button.onclick = () => {
+                playSound('ui_click');
                 if (!upgrade.purchased) {
-                    playSound('ui_click');
                     purchaseAndEquip(upgrade);
+                } else {
+                    toggleEquipUpgrade(upgrade);
                 }
             };
             container.appendChild(button);
         }
 
-        const costText = upgrade.purchased ? "Owned" : `${upgrade.cost} CS`;
+        const isEquipped = state.bunny.equippedCustomUpgradeId === upgrade.itemId;
+        const costText = upgrade.purchased ? (isEquipped ? "Equipped" : "Equip") : `${upgrade.cost} CS`;
+        
         button.innerHTML = `
             <span class="name">${upgrade.itemName}</span>
             <span class="cost">${costText}</span>
         `;
-        button.disabled = state.resources.carrotShards < upgrade.cost || upgrade.purchased;
+        
+        button.disabled = !upgrade.purchased && state.resources.carrotShards < upgrade.cost;
+        
+        button.classList.remove('purchased', 'equipped');
         if (upgrade.purchased) {
             button.classList.add('purchased');
-        } else {
-            button.classList.remove('purchased');
+        }
+        if (isEquipped) {
+            button.classList.add('equipped');
         }
     });
 

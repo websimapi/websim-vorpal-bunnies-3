@@ -154,11 +154,24 @@ async function proceedWithGeneration(promptText, itemName, cost) {
     document.getElementById('ai-prompt').value = "";
 }
 
+export function toggleEquipUpgrade(upgrade) {
+    if (!upgrade.purchased) return;
+
+    // If it's already equipped, unequip it
+    if (gameState.bunny.equippedCustomUpgradeId === upgrade.itemId) {
+        gameState.bunny.equippedCustomUpgradeId = null;
+        gameState.bunny.currentPortraitUrl = gameState.bunny.defaultPortraitUrl;
+    } else { // Otherwise, equip it
+        gameState.bunny.equippedCustomUpgradeId = upgrade.itemId;
+        gameState.bunny.currentPortraitUrl = upgrade.mergedImageUrl;
+    }
+    document.querySelector('.bunny-portrait').src = gameState.bunny.currentPortraitUrl;
+    saveGame();
+}
+
 export async function purchaseAndEquip(upgrade) {
     if (gameState.resources.carrotShards >= upgrade.cost) {
         gameState.resources.carrotShards -= upgrade.cost;
-        gameState.bunny.currentPortraitUrl = upgrade.mergedImageUrl;
-        document.querySelector('.bunny-portrait').src = upgrade.mergedImageUrl;
         playSound('upgrade');
 
         // Update the item's state locally for immediate UI feedback
@@ -166,6 +179,9 @@ export async function purchaseAndEquip(upgrade) {
         if (localUpgrade) {
             localUpgrade.purchased = true;
         }
+
+        // Equip it right away
+        toggleEquipUpgrade(upgrade);
 
         // Find user's record and update the specific item in the array
         const currentUser = await window.websim.getCurrentUser();
@@ -185,9 +201,7 @@ export async function purchaseAndEquip(upgrade) {
             });
         }
 
-
-        saveGame();
-        // The subscription will eventually sync, but local change is faster.
+        // saveGame is called inside toggleEquipUpgrade
     } else {
         alert("Not enough Carrot Shards!");
     }

@@ -15,6 +15,8 @@ export let gameState = {
         stats: { attack: 1, defense: 0, maxHp: 10 },
         hp: 10,
         currentPortraitUrl: 'vorpal_bunny_portrait.png',
+        defaultPortraitUrl: 'vorpal_bunny_portrait.png',
+        equippedCustomUpgradeId: null,
     },
     monster: null,
     zone: {
@@ -79,6 +81,21 @@ function loadGame() {
 
         // Ensure stats are correct after loading upgrades and level
         recalculateBunnyStats();
+
+        // Restore correct portrait based on equipped item
+        if (gameState.bunny.equippedCustomUpgradeId) {
+            // Find the upgrade from the saved customUpgrades list
+            const equippedUpgrade = (gameState.customUpgrades || []).find(u => u.itemId === gameState.bunny.equippedCustomUpgradeId && u.purchased);
+            if (equippedUpgrade) {
+                gameState.bunny.currentPortraitUrl = equippedUpgrade.mergedImageUrl;
+            } else {
+                // Equipped item not found or not purchased, reset to default
+                gameState.bunny.equippedCustomUpgradeId = null;
+                gameState.bunny.currentPortraitUrl = gameState.bunny.defaultPortraitUrl || 'vorpal_bunny_portrait.png';
+            }
+        } else {
+            gameState.bunny.currentPortraitUrl = gameState.bunny.defaultPortraitUrl || 'vorpal_bunny_portrait.png';
+        }
 
         // Make sure bunny has HP, especially if loaded from an old save
         if (!gameState.bunny.hp) {

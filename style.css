@@ -247,6 +247,15 @@ main {
     color: #4caf50;
 }
 
+#custom-upgrades-container .upgrade-button.equipped {
+    border-color: #2196F3; /* Blue border to show it's active */
+    background-color: #2a3d4a;
+}
+
+#custom-upgrades-container .upgrade-button.equipped .cost {
+    color: #64b5f6;
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;
