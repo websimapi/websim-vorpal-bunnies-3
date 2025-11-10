@@ -29,6 +29,15 @@ async function handleGenerateUpgrade() {
 
     showModal("Analyzing your idea...");
 
+    // Find the currently equipped upgrade to provide context to the AI
+    const equippedUpgradeId = gameState.bunny.equippedCustomUpgradeId;
+    const equippedUpgrade = gameState.customUpgrades.find(u => u.itemId === equippedUpgradeId);
+
+    let costPrompt = `The user wants to add the following to their character: "${promptText}". Calculate the cost for this new item and give it a name.`;
+    if (equippedUpgrade) {
+        costPrompt = `The character is already equipped with an item that cost ${equippedUpgrade.cost} and was described as: "${equippedUpgrade.prompt}". The user wants to add the following to their character: "${promptText}". Calculate the cost for the new addition and give it a name.`;
+    }
+
     // 1. Get Cost from AI
     let cost = 0;
     let itemName = "Custom Upgrade";
@@ -36,10 +45,10 @@ async function handleGenerateUpgrade() {
         const costCompletion = await websim.chat.completions.create({
             messages: [{
                 role: "system",
-                content: `You determine the cost of a cosmetic item for a game based on the user's request. Simple items (hat, scarf) should cost between 50-150. More complex items (armor, wings) 150-400. Very complex items (full outfit, background change) 400-1000. Respond with JSON: {"cost": number, "itemName": "short item name"}`
+                content: `You are an AI for a game that determines the cost of cosmetic items. The cost is based on the complexity of the user's request. Simple items (hat, scarf) cost 50-150. More complex items (armor, wings) cost 150-400. Very complex items (full outfit, background change) cost 400-1000. If the user is adding to an existing item, calculate the cost for the *new addition only*. Your response must be in JSON format like this: {"cost": number, "itemName": "short item name for the new addition"}`
             }, {
                 role: "user",
-                content: promptText
+                content: costPrompt
             }],
             json: true,
         });
@@ -100,7 +109,7 @@ async function proceedWithGeneration(promptText, itemName, cost) {
     `);
     let mergedUrl;
     try {
-        const baseBunnyDataUrl = await urlToDataUrl('./vorpal_bunny_portrait.png');
+        const baseBunnyDataUrl = await urlToDataUrl(gameState.bunny.currentPortraitUrl);
         const assetDataUrl = await urlToDataUrl(assetUrl);
 
         const mergeResult = await websim.imageGen({
