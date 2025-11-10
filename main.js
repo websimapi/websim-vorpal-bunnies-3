@@ -1,5 +1,5 @@
-import { gameState, update } from './game.js';
-import { render, updateCustomUpgrades } from './ui.js';
+import { gameState, update, saveGame } from './game.js';
+import { render } from './ui.js';
 import { loadAllSounds } from './sounds.js';
 import { initAICustomization } from './gemini_character_creator.js';
 
@@ -29,7 +29,7 @@ async function main() {
     room.collection('ai_upgrade')
         .filter({ owner: currentUser.username, purchased: { $ne: true } })
         .subscribe((upgrades) => {
-            updateCustomUpgrades(upgrades.reverse());
+            gameState.customUpgrades = upgrades.reverse();
         });
 
     requestAnimationFrame(gameLoop);

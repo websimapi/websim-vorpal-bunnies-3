@@ -139,13 +139,16 @@ export async function purchaseAndEquip(upgrade) {
         gameState.bunny.currentPortraitUrl = upgrade.mergedImageUrl;
         document.querySelector('.bunny-portrait').src = upgrade.mergedImageUrl;
 
-        // Mark as purchased
+        // Remove from local state for immediate UI update
+        gameState.customUpgrades = gameState.customUpgrades.filter(u => u.id !== upgrade.id);
+
+        // Mark as purchased in DB
         await room.collection('ai_upgrade').update(upgrade.id, {
             purchased: true
         });
 
         saveGame();
-        // The subscription will handle the UI update to remove the button
+        // The subscription will eventually sync, but local change is faster.
     } else {
         alert("Not enough Carrot Shards!");
     }

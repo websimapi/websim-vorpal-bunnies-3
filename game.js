@@ -26,6 +26,7 @@ export let gameState = {
     resources: {
         carrotShards: 0,
     },
+    customUpgrades: [], // To store AI-generated upgrades
     combat: {
         progress: 0,
         speed: 10, // progress per second

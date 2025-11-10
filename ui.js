@@ -73,22 +73,46 @@ export function updateModalContent(content) {
     elements.modalBody.innerHTML = content;
 }
 
-export function updateCustomUpgrades(upgrades) {
-    elements.customUpgradesContainer.innerHTML = '';
-    for (const upgrade of upgrades) {
-        const button = document.createElement('button');
-        button.className = 'upgrade-button';
-        button.onclick = () => {
-            playSound('ui_click');
-            purchaseAndEquip(upgrade);
-        };
+function updateCustomUpgradeButtons(state) {
+    const upgrades = state.customUpgrades || [];
+    const container = elements.customUpgradesContainer;
+
+    // Basic diffing to avoid recreating elements unnecessarily
+    const existingButtons = new Map();
+    container.querySelectorAll('.upgrade-button').forEach(btn => {
+        existingButtons.set(btn.dataset.upgradeId, btn);
+    });
+
+    const newIds = new Set();
+
+    upgrades.forEach(upgrade => {
+        newIds.add(upgrade.id);
+        let button = existingButtons.get(upgrade.id);
+
+        if (!button) {
+            button = document.createElement('button');
+            button.className = 'upgrade-button';
+            button.dataset.upgradeId = upgrade.id;
+            button.onclick = () => {
+                playSound('ui_click');
+                purchaseAndEquip(upgrade);
+            };
+            container.appendChild(button);
+        }
+
         button.innerHTML = `
             <span class="name">${upgrade.itemName}</span>
             <span class="cost">${upgrade.cost} CS</span>
         `;
-        button.disabled = window.gameState.resources.carrotShards < upgrade.cost;
-        elements.customUpgradesContainer.appendChild(button);
-    }
+        button.disabled = state.resources.carrotShards < upgrade.cost;
+    });
+
+    // Remove old buttons
+    existingButtons.forEach((button, id) => {
+        if (!newIds.has(id)) {
+            button.remove();
+        }
+    });
 }
 
 export function render(state) {
@@ -135,15 +159,6 @@ export function render(state) {
         updateUpgradeButton(state, key);
     }
 
-    // Custom Upgrades - re-check disable status on render
-    const customButtons = elements.customUpgradesContainer.querySelectorAll('.upgrade-button');
-    customButtons.forEach(button => {
-        // This is a bit of a hack, would be better to have upgrade data attached.
-        // For now, parsing from text content.
-        const costText = button.querySelector('.cost').textContent;
-        const cost = parseInt(costText, 10);
-        if (!isNaN(cost)) {
-            button.disabled = state.resources.carrotShards < cost;
-        }
-    });
+    // Custom Upgrades
+    updateCustomUpgradeButtons(state);
 }
