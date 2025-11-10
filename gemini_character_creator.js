@@ -1,5 +1,6 @@
 import { gameState, saveGame } from './game.js';
 import { showModal, hideModal, updateModalContent } from './ui.js';
+import { playSound } from './sounds.js';
 
 let room;
 
@@ -158,6 +159,7 @@ export async function purchaseAndEquip(upgrade) {
         gameState.resources.carrotShards -= upgrade.cost;
         gameState.bunny.currentPortraitUrl = upgrade.mergedImageUrl;
         document.querySelector('.bunny-portrait').src = upgrade.mergedImageUrl;
+        playSound('upgrade');
 
         // Update the item's state locally for immediate UI feedback
         const localUpgrade = gameState.customUpgrades.find(u => u.itemId === upgrade.itemId);

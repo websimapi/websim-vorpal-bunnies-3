@@ -159,8 +159,10 @@ main {
     border-bottom: 1px solid #333;
 }
 
-#upgrades-container button {
-    display: block;
+.upgrade-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
@@ -172,14 +174,19 @@ main {
     text-align: left;
 }
 
-#upgrades-container button:hover:not(:disabled) {
+.upgrade-button:hover:not(:disabled) {
     background-color: var(--button-hover-bg);
 }
 
-#upgrades-container button:disabled {
+.upgrade-button:disabled {
     background-color: #333;
     color: #888;
     cursor: not-allowed;
+}
+
+.upgrade-button .cost {
+    font-weight: bold;
+    color: var(--highlight-color);
 }
 
 #ai-customization-section {
