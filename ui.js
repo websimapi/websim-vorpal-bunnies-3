@@ -105,14 +105,23 @@ function updateCustomUpgradeButtons(state) {
         }
 
         const isEquipped = state.bunny.equippedCustomUpgradeId === upgrade.itemId;
-        const costText = upgrade.purchased ? (isEquipped ? "Equipped" : "Equip") : `${upgrade.cost} CS`;
+        
+        // Determine the cost to display/charge
+        const equippedUpgradeId = state.bunny.equippedCustomUpgradeId;
+        const equippedUpgrade = state.customUpgrades.find(u => u.itemId === equippedUpgradeId);
+        const baseCost = equippedUpgrade ? equippedUpgrade.cost : 0;
+        const displayCost = upgrade.cost - (isEquipped ? 0 : baseCost);
+
+        const costText = upgrade.purchased 
+            ? (isEquipped ? "Equipped" : "Equip") 
+            : `${displayCost} CS`;
         
         button.innerHTML = `
-            <span class="name">${upgrade.itemName}</span>
+            <span class="name">${upgrade.itemName} (Value: ${upgrade.cost})</span>
             <span class="cost">${costText}</span>
         `;
         
-        button.disabled = !upgrade.purchased && state.resources.carrotShards < upgrade.cost;
+        button.disabled = !upgrade.purchased && state.resources.carrotShards < displayCost;
         
         button.classList.remove('purchased', 'equipped');
         if (upgrade.purchased) {

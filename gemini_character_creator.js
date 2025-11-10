@@ -32,20 +32,24 @@ async function handleGenerateUpgrade() {
     // Find the currently equipped upgrade to provide context to the AI
     const equippedUpgradeId = gameState.bunny.equippedCustomUpgradeId;
     const equippedUpgrade = gameState.customUpgrades.find(u => u.itemId === equippedUpgradeId);
+    const baseCost = equippedUpgrade ? equippedUpgrade.cost : 0;
 
     let costPrompt = `The user wants to add the following to their character: "${promptText}". Calculate the cost for this new item and give it a name.`;
+    let systemPrompt = `You are an AI for a game that determines the cost of cosmetic items. The cost is based on the complexity of the user's request. Simple items (hat, scarf) cost 50-150. More complex items (armor, wings) cost 150-400. Very complex items (full outfit, background change) cost 400-1000. Your response must be in JSON format like this: {"cost": number, "itemName": "short item name for the new addition"}`;
+    
     if (equippedUpgrade) {
-        costPrompt = `The character is already equipped with an item that cost ${equippedUpgrade.cost} and was described as: "${equippedUpgrade.prompt}". The user wants to add the following to their character: "${promptText}". Calculate the cost for the new addition and give it a name.`;
+        costPrompt = `The character is already equipped with an item that cost ${equippedUpgrade.cost} and was described as: "${equippedUpgrade.prompt}". The user wants to add the following: "${promptText}". Calculate the NEW TOTAL cost for the character with this addition, and give a name for the new addition. The new total cost must be greater than the previous cost of ${equippedUpgrade.cost}.`;
+        systemPrompt = `You are an AI for a game that determines the cost of cosmetic items. The cost is based on the complexity of the user's request. The user is adding to an existing item that costs ${equippedUpgrade.cost}. You must calculate a NEW TOTAL cost that is higher than the previous cost. The increase should be based on complexity: simple additions (scarf) add 50-150, complex additions (wings) add 150-400. Your response must be in JSON format like this: {"cost": new_total_cost, "itemName": "short item name for the new addition"}`;
     }
 
     // 1. Get Cost from AI
-    let cost = 0;
+    let totalCost = 0;
     let itemName = "Custom Upgrade";
     try {
         const costCompletion = await websim.chat.completions.create({
             messages: [{
                 role: "system",
-                content: `You are an AI for a game that determines the cost of cosmetic items. The cost is based on the complexity of the user's request. Simple items (hat, scarf) cost 50-150. More complex items (armor, wings) cost 150-400. Very complex items (full outfit, background change) cost 400-1000. If the user is adding to an existing item, calculate the cost for the *new addition only*. Your response must be in JSON format like this: {"cost": number, "itemName": "short item name for the new addition"}`
+                content: systemPrompt
             }, {
                 role: "user",
                 content: costPrompt
@@ -53,18 +57,21 @@ async function handleGenerateUpgrade() {
             json: true,
         });
         const result = JSON.parse(costCompletion.content);
-        cost = result.cost || 200;
+        totalCost = result.cost || (baseCost + 200);
         itemName = result.itemName || "Custom Upgrade";
     } catch (e) {
         console.error("Error getting cost:", e);
-        cost = 200; // fallback cost
+        totalCost = baseCost + 200; // fallback cost
     }
+    
+    const additionalCost = totalCost - baseCost;
 
     updateModalContent(
         `<h3>Confirm Upgrade</h3>
-        <p><strong>Item:</strong> ${itemName}</p>
+        <p><strong>New Item:</strong> ${itemName}</p>
         <p><strong>Description:</strong> "${promptText}"</p>
-        <p>This will cost <strong>${cost} Carrot Shards</strong> to unlock after it's generated.</p>
+        <p>This will cost an additional <strong>${additionalCost} Carrot Shards</strong> to unlock.</p>
+        ${baseCost > 0 ? `<p>(New total value: ${totalCost} CS)</p>` : ''}
         <p>Proceed with generation?</p>
         <div class="modal-buttons">
             <button id="confirm-generation-btn">Yes, Create It!</button>
@@ -74,7 +81,7 @@ async function handleGenerateUpgrade() {
 
     document.getElementById('cancel-generation-btn').onclick = hideModal;
     document.getElementById('confirm-generation-btn').onclick = async () => {
-        await proceedWithGeneration(promptText, itemName, cost);
+        await proceedWithGeneration(promptText, itemName, totalCost);
     };
 }
 
@@ -113,7 +120,7 @@ async function proceedWithGeneration(promptText, itemName, cost) {
         const assetDataUrl = await urlToDataUrl(assetUrl);
 
         const mergeResult = await websim.imageGen({
-            prompt: `Combine these two images. The rabbit is the character. The other image is an item that should be equipped by the rabbit. Maintain the original cartoon art style and transparent background of the rabbit.`,
+            prompt: `Combine these two images. The rabbit is the character. The other image is an item or accessory that should be equipped by or added to the rabbit. Maintain the original cartoon art style and transparent background of the rabbit. The final image should just be the rabbit with its new equipment.`,
             image_inputs: [{ url: baseBunnyDataUrl }, { url: assetDataUrl }],
             transparent: true,
         });
@@ -176,11 +183,20 @@ export function toggleEquipUpgrade(upgrade) {
     }
     document.querySelector('.bunny-portrait').src = gameState.bunny.currentPortraitUrl;
     saveGame();
+    
+    // Trigger a re-render to update the button states (equipped, etc.)
+    const { render } = await import('./ui.js');
+    render(gameState);
 }
 
 export async function purchaseAndEquip(upgrade) {
-    if (gameState.resources.carrotShards >= upgrade.cost) {
-        gameState.resources.carrotShards -= upgrade.cost;
+    const equippedUpgradeId = gameState.bunny.equippedCustomUpgradeId;
+    const equippedUpgrade = gameState.customUpgrades.find(u => u.itemId === equippedUpgradeId);
+    const baseCost = equippedUpgrade ? equippedUpgrade.cost : 0;
+    const purchaseCost = upgrade.cost - baseCost;
+
+    if (gameState.resources.carrotShards >= purchaseCost) {
+        gameState.resources.carrotShards -= purchaseCost;
         playSound('upgrade');
 
         // Update the item's state locally for immediate UI feedback
