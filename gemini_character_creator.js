@@ -1,5 +1,5 @@
 import { gameState, saveGame } from './game.js';
-import { showModal, hideModal, updateModalContent, updateCustomUpgrades } from './ui.js';
+import { showModal, hideModal, updateModalContent } from './ui.js';
 
 let room;
 
