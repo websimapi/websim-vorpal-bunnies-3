@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vorpal Bunnies</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+      "imports": {}
+    }
+    </script>
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>Vorpal Bunnies</h1>
+            <div class="resources">
+                Carrot Shards: <span id="carrot-shards">0</span>
+            </div>
+        </header>
+
+        <main>
+            <div id="left-panel" class="panel">
+                <h2>The Warren</h2>
+                <div id="bunny-info">
+                    <img src="vorpal_bunny_portrait.png" alt="Vorpal Bunny" class="bunny-portrait">
+                    <h3 id="bunny-name">Binky</h3>
+                    <p>Level: <span id="bunny-level">1</span></p>
+                    <div class="stat-bar">
+                        <span>XP</span>
+                        <div class="bar-container">
+                            <div id="xp-bar" class="bar"></div>
+                        </div>
+                        <span id="xp-text">0 / 100</span>
+                    </div>
+                </div>
+                <div id="bunny-stats">
+                    <h3>Stats</h3>
+                    <p>HP: <span id="bunny-hp">10</span> / <span id="bunny-max-hp">10</span></p>
+                    <p>Attack: <span id="bunny-attack">1</span></p>
+                    <p>Defense: <span id="bunny-defense">0</span></p>
+                </div>
+                <div id="ai-customization-section">
+                    <h3>AI Customization</h3>
+                    <textarea id="ai-prompt" placeholder="Describe an item for your bunny... e.g., 'a cool pirate hat' or 'a flaming sword'"></textarea>
+                    <button id="generate-ai-upgrade-btn">Generate Upgrade Idea</button>
+                </div>
+                <div id="upgrades-section">
+                    <h3>Upgrades</h3>
+                    <div id="custom-upgrades-container">
+                        <!-- AI Upgrades will appear here -->
+                    </div>
+                    <div id="upgrades-container">
+                        <!-- Upgrades will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="middle-panel" class="panel">
+                <div id="zone-info">
+                    <h2 id="zone-name">The Sunny Meadow</h2>
+                    <p>Monsters until boss: <span id="monsters-to-boss">10</span></p>
+                </div>
+                <div id="combat-info">
+                    <h3 id="monster-name">Grassy Slime</h3>
+                    <div class="stat-bar">
+                        <span>HP</span>
+                        <div class="bar-container">
+                            <div id="monster-hp-bar" class="bar"></div>
+                        </div>
+                         <span id="monster-hp-text">5 / 5</span>
+                    </div>
+                    <p>Attack: <span id="monster-attack">1</span></p>
+                </div>
+                <div id="combat-progress">
+                    <p>Slaying...</p>
+                    <div class="progress-bar-container">
+                        <div id="combat-progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="right-panel" class="panel">
+                <h2>Log</h2>
+                <div id="log-container">
+                    <!-- Log messages will appear here -->
+                </div>
+            </div>
+        </main>
+
+        <div id="ai-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div id="modal-body">
+                    <!-- Modal content goes here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="main.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
