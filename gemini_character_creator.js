@@ -170,7 +170,7 @@ async function proceedWithGeneration(promptText, itemName, cost) {
     document.getElementById('ai-prompt').value = "";
 }
 
-export function toggleEquipUpgrade(upgrade) {
+export async function toggleEquipUpgrade(upgrade) {
     if (!upgrade.purchased) return;
 
     // If it's already equipped, unequip it
